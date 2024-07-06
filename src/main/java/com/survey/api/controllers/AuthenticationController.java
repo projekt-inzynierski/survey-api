@@ -27,7 +27,7 @@ public class AuthenticationController {
 
     @PostMapping("/respondents")
     @CrossOrigin
-    public List<LoginDto> craeteRespondentsAccounts(@Validated @RequestBody CreateRespondentsAccountsDto dto){
+    public List<LoginDto> createRespondentsAccounts(@Validated @RequestBody CreateRespondentsAccountsDto dto){
         return authenticationService.createRespondentsAccounts(dto);
     }
 }

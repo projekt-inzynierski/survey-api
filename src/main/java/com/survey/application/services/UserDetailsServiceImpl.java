@@ -36,8 +36,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     private List<GrantedAuthority> mapRolesToAuthorities(IdentityUser user){
-        List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
-        authorities.add(new SimpleGrantedAuthority(user.getRole()));
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
         return authorities;
     }
 

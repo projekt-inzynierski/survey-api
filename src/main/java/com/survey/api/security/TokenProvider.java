@@ -1,13 +1,11 @@
 package com.survey.api.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import java.util.Date;
-import io.jsonwebtoken.Jwts;
 
 import javax.swing.text.TableView;
 
@@ -45,6 +43,12 @@ public class TokenProvider {
                 .getBody();
 
         return claims.getSubject();
+    }
+
+    public Jwt<Header, Claims> getJwt(String token){
+        return Jwts.parser()
+                .setSigningKey(securitySettings.getKey())
+                .parseClaimsJwt(token);
     }
 
     public boolean validateToken(String token){

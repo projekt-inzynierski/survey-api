@@ -1,6 +1,10 @@
 package com.survey.api.security;
 
 import com.survey.application.services.UserDetailsServiceImpl;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Header;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwt;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,7 +40,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user,
                     user.getAuthorities());
             authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         }
         filterChain.doFilter(request, response);

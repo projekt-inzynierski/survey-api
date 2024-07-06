@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.util.UUID;
@@ -19,7 +20,7 @@ import java.util.UUID;
 @ExtendWith(IntegrationTestDatabaseInitializer.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
-public class AuthenticationControllerTest{
+public class AuthenticationControllerTest extends BaseIntegrationTest{
     private final WebTestClient webTestClient;
     private final ObjectMapper objectMapper;
     private final IdentityUserRepository userRepository;
@@ -110,6 +111,37 @@ public class AuthenticationControllerTest{
         webTestClient.post().uri("/api/authentication/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(json)
+                .exchange()
+                .expectStatus()
+                .isBadRequest();
+    }
+
+    @Test
+    public void testCreateRespondentsAccountsWithoutValidAuthenticationToken(){
+        webTestClient.post().uri("/api/authentication/respondents")
+                .contentType(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus()
+                .isUnauthorized();
+    }
+
+    @Test
+    public void testCreateRespondentsAccountsWithBadRole(){
+        String token = saddUserWithRoleAndGetToken("Respondent");
+        webTestClient.post().uri("/api/authentication/respondents")
+                .header("Authentication", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus()
+                .isForbidden();
+    }
+
+    @Test
+    public void testCreateRespondentsAccountsWithAdminRoleButInvalidBody(){
+        String token = saddUserWithRoleAndGetToken("ADMIN");
+        webTestClient.post().uri("/api/authentication/respondents")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus()
                 .isBadRequest();
