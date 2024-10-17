@@ -133,9 +133,39 @@ implements ConstraintValidator<ValidSendSurveyResponse, SendSurveyResponseDto> {
                 return validateChoice(question, answer, ctx, true);
             case discrete_number_selection:
                 return validateNumberRange(question, answer, ctx);
+            case number_selection:
+                return validateNumericAnswer(question, answer, ctx, "Numeric answer");
             default:
                 throw new IllegalArgumentException();
         }
+    }
+
+
+    private boolean validateNumericAnswer(Question question, AnswerDto answerDto, ConstraintValidatorContext ctx, String answerTypeName) {
+        boolean result = true;
+        if (answerDto.getNumericAnswer() == null){
+            ctx
+                    .buildConstraintViolationWithTemplate(answerTypeName + " must have a numeric value")
+                    .addPropertyNode("answers")
+                    .addConstraintViolation();
+            result = false;
+        }
+        if (answerDto.getSelectedOptions() != null && !answerDto.getSelectedOptions().isEmpty()){
+            ctx
+                    .buildConstraintViolationWithTemplate(answerTypeName + " must not have a selected options")
+                    .addPropertyNode("answers")
+                    .addConstraintViolation();
+            result = false;
+        }
+
+        if (answerDto.getYesNoAnswer() != null){
+            ctx
+                    .buildConstraintViolationWithTemplate(answerTypeName + " answer must not have a yes/no answer specified")
+                    .addPropertyNode("answers")
+                    .addConstraintViolation();
+            result = false;
+        }
+        return result;
     }
 
     private boolean validateYesNo(AnswerDto answerDto, ConstraintValidatorContext ctx){
@@ -168,38 +198,17 @@ implements ConstraintValidator<ValidSendSurveyResponse, SendSurveyResponseDto> {
     }
 
     private boolean validateNumberRange(Question question, AnswerDto answerDto, ConstraintValidatorContext ctx){
-        boolean result = true;
-        if (answerDto.getNumericAnswer() == null){
-            ctx
-                    .buildConstraintViolationWithTemplate("Linear scale answer must have a numeric value")
-                    .addPropertyNode("answers")
-                    .addConstraintViolation();
-            result = false;
-        } else if(answerDto.getNumericAnswer() > question.getNumberRange().getTo() ||
-         answerDto.getNumericAnswer() < question.getNumberRange().getFrom()) {
-            ctx
-                    .buildConstraintViolationWithTemplate("Answer violates a number range constraint")
-                    .addPropertyNode("answers")
-                    .addConstraintViolation();
-            result = false;
-        }
+        boolean result = validateNumericAnswer(question, answerDto, ctx, "Linear scale answer");
 
-        if (answerDto.getSelectedOptions() != null && !answerDto.getSelectedOptions().isEmpty()){
-            ctx
-                    .buildConstraintViolationWithTemplate("Linear scale answer must not have a selected options")
-                    .addPropertyNode("answers")
-                    .addConstraintViolation();
-            result = false;
+        if (result) {
+            if (answerDto.getNumericAnswer() > question.getNumberRange().getTo() ||
+                    answerDto.getNumericAnswer() < question.getNumberRange().getFrom()) {
+                ctx.buildConstraintViolationWithTemplate("Answer violates a number range constraint")
+                        .addPropertyNode("answers")
+                        .addConstraintViolation();
+                result = false;
+            }
         }
-
-        if (answerDto.getYesNoAnswer() != null){
-            ctx
-                    .buildConstraintViolationWithTemplate("Linear scale answer must not have a yes/no answer specified")
-                    .addPropertyNode("answers")
-                    .addConstraintViolation();
-            result = false;
-        }
-
         return result;
     }
 

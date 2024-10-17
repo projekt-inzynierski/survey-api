@@ -30,7 +30,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -171,6 +172,20 @@ class SendSurveyResponseDtoValidatorTest {
                                 null
                         ),
                         new AnswerDto(questionId, Stream.of(new SelectedOptionDto(optionId)).collect(Collectors.toList()), null, null)
+                ),
+                getArgumentsWithSingleQuestionSurvey(
+                        new Question(
+                                questionId,
+                                null,
+                                null,
+                                null,
+                                QuestionType.number_selection,
+                                true,
+                                null,
+                                null,
+                                null
+                        ),
+                        new AnswerDto(questionId, null, new Random().nextInt(), null)
                 )
         );
     }
@@ -459,6 +474,48 @@ class SendSurveyResponseDtoValidatorTest {
                                 null
                         ),
                         new AnswerDto(questionId, optionListOfMoreThanOneSelectedOptions, null, null)
+                ),
+                getArgumentsWithSingleQuestionSurvey(
+                        new Question(
+                                questionId,
+                                null,
+                                null,
+                                null,
+                                QuestionType.number_selection,
+                                true,
+                                null,
+                                null,
+                                null
+                        ),
+                        new AnswerDto(questionId, null, null, true)
+                ),
+                getArgumentsWithSingleQuestionSurvey(
+                        new Question(
+                                questionId,
+                                null,
+                                null,
+                                null,
+                                QuestionType.number_selection,
+                                true,
+                                null,
+                                null,
+                                null
+                        ),
+                        new AnswerDto(questionId, optionList, null, null)
+                ),
+                getArgumentsWithSingleQuestionSurvey(
+                        new Question(
+                                questionId,
+                                null,
+                                null,
+                                null,
+                                QuestionType.number_selection,
+                                true,
+                                null,
+                                null,
+                                null
+                        ),
+                        new AnswerDto(questionId, null, null, null)
                 )
         );
     }
@@ -931,4 +988,42 @@ class SendSurveyResponseDtoValidatorTest {
         boolean isValid = validator.isValid(response, context);
         assertFalse(isValid);
     }
+
+    @Test
+    void shouldReturnFalseWhenSendSurveyResponseDtoIsNull() {
+        SendSurveyResponseDto sendSurveyResponseDto = null;
+
+        boolean result = validator.isValid(sendSurveyResponseDto, context);
+
+        assertFalse(result);
+        verify(context).buildConstraintViolationWithTemplate("Survey response data is invalid");
+        verify(violationBuilder).addPropertyNode("surveyId");
+    }
+
+    @Test
+    void shouldReturnFalseWhenSurveyIdIsNull() {
+        SendSurveyResponseDto sendSurveyResponseDto = new SendSurveyResponseDto();
+        sendSurveyResponseDto.setSurveyId(null);
+        sendSurveyResponseDto.setAnswers(Collections.emptyList());
+
+        boolean result = validator.isValid(sendSurveyResponseDto, context);
+
+        assertFalse(result);
+        verify(context).buildConstraintViolationWithTemplate("Survey response data is invalid");
+        verify(violationBuilder).addPropertyNode("surveyId");
+    }
+
+    @Test
+    void shouldReturnFalseWhenAnswersAreNull() {
+        SendSurveyResponseDto sendSurveyResponseDto = new SendSurveyResponseDto();
+        sendSurveyResponseDto.setSurveyId(UUID.randomUUID());
+        sendSurveyResponseDto.setAnswers(null);
+
+        boolean result = validator.isValid(sendSurveyResponseDto, context);
+
+        assertFalse(result);
+        verify(context).buildConstraintViolationWithTemplate("Survey response data is invalid");
+        verify(violationBuilder).addPropertyNode("surveyId");
+    }
+
 }

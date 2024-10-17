@@ -193,6 +193,11 @@ public class SurveyServiceImpl implements SurveyService {
             question.setOptions(null);
         }
 
+        if (question.getQuestionType().equals(QuestionType.number_selection)) {
+            question.setNumberRange(null);
+            question.setOptions(null);
+        }
+
         return question;
     }
 

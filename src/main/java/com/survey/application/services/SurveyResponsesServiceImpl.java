@@ -128,6 +128,10 @@ private SurveyParticipation mapQuestionAnswers(SendSurveyResponseDto sendSurveyR
                     questionAnswer.setYesNoAnswer(answerDto.getYesNoAnswer());
                 }
 
+                if (question.getQuestionType().equals(QuestionType.number_selection)) {
+                    questionAnswer.setNumericAnswer(answerDto.getNumericAnswer());
+                }
+
                 return questionAnswer;
             }).collect(Collectors.toList());
 
