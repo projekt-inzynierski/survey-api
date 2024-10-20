@@ -15,3 +15,7 @@ To configure your IntelliJ Idea to the following:
 - On the top mane open `Run` context menu
 - Go to `Debug` -> `Edit configurations` -> `Edit environmental variables`
 - Add proper variables with values and save changes
+
+## Documentation
+- Run this API
+- Go to http://[host]:[port]/swagger-ui.html

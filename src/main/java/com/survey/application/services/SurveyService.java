@@ -1,9 +1,6 @@
 package com.survey.application.services;
 
-import com.survey.application.dtos.surveyDtos.CreateSurveyDto;
-import com.survey.application.dtos.surveyDtos.ResponseSurveyDto;
-import com.survey.application.dtos.surveyDtos.ResponseSurveyShortDto;
-import com.survey.application.dtos.surveyDtos.ResponseSurveyShortSummariesDto;
+import com.survey.application.dtos.surveyDtos.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,4 +13,5 @@ public interface SurveyService {
     List<ResponseSurveyShortDto> getSurveysShort();
     List<ResponseSurveyShortSummariesDto> getSurveysShortSummaries();
     ResponseSurveyDto getSurveyById(UUID surveyId);
+    List<ResponseSurveyWithTimeSlotsDto> getallSurveysWithTimeSlots();
 }

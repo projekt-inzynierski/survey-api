@@ -34,6 +34,9 @@ public class SurveyServiceImpl implements SurveyService {
     private final EntityManager entityManager;
     private final SurveyValidationService surveyValidationService;
     private final ClaimsPrincipalService claimsPrincipalService;
+    private final UpcomingTimeSlotsService upcomingTimeSlotsService;
+    private final SurveySendingPolicyRepository surveySendingPolicyRepository;
+    private final SurveyWithTimeSlotsService surveyWithTimeSlotsService;
 
     @Autowired
     public SurveyServiceImpl(SurveyRepository surveyRepository, ModelMapper modelMapper,
@@ -41,7 +44,7 @@ public class SurveyServiceImpl implements SurveyService {
                              EntityManager entityManager,
                              SurveyParticipationTimeSlotRepository surveyParticipationTimeSlotRepository,
                              SurveyValidationService surveyValidationService,
-                             ClaimsPrincipalService claimsPrincipalService) {
+                             ClaimsPrincipalService claimsPrincipalService, UpcomingTimeSlotsService upcomingTimeSlotsService, SurveySendingPolicyRepository surveySendingPolicyRepository, SurveyWithTimeSlotsService surveyWithTimeSlotsService) {
         this.surveyRepository = surveyRepository;
         this.modelMapper = modelMapper;
         this.respondentGroupRepository = respondentGroupRepository;
@@ -49,6 +52,9 @@ public class SurveyServiceImpl implements SurveyService {
         this.surveyParticipationTimeSlotRepository = surveyParticipationTimeSlotRepository;
         this.surveyValidationService = surveyValidationService;
         this.claimsPrincipalService = claimsPrincipalService;
+        this.upcomingTimeSlotsService = upcomingTimeSlotsService;
+        this.surveySendingPolicyRepository = surveySendingPolicyRepository;
+        this.surveyWithTimeSlotsService = surveyWithTimeSlotsService;
     }
 
     @Override
@@ -128,12 +134,20 @@ public class SurveyServiceImpl implements SurveyService {
                 .collect(Collectors.toList());
     }
 
+    @Override
     public ResponseSurveyDto getSurveyById(UUID surveyId) {
         Survey survey = surveyRepository.findById(surveyId)
                 .orElseThrow(() -> new NoSuchElementException("Survey not found with id: " + surveyId));
 
         return modelMapper.map(survey, ResponseSurveyDto.class);
     }
+
+    @Override
+    public List<ResponseSurveyWithTimeSlotsDto> getallSurveysWithTimeSlots(){
+        List<Survey> surveyList = surveyRepository.findAll();
+        return surveyWithTimeSlotsService.getSurveysWithTimeSlots(surveyList);
+    }
+
 
     private Survey mapToSurvey(CreateSurveyDto createSurveyDto){
         Survey survey = new Survey();

@@ -1,9 +1,6 @@
 package com.survey.api.controllers;
 
-import com.survey.application.dtos.surveyDtos.CreateSurveyDto;
-import com.survey.application.dtos.surveyDtos.ResponseSurveyDto;
-import com.survey.application.dtos.surveyDtos.ResponseSurveyShortDto;
-import com.survey.application.dtos.surveyDtos.ResponseSurveyShortSummariesDto;
+import com.survey.application.dtos.surveyDtos.*;
 import com.survey.application.services.SurveyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -60,5 +57,14 @@ public class SurveyController {
         List<ResponseSurveyShortSummariesDto> shortSummariesSurveys = surveyService.getSurveysShortSummaries();
         return ResponseEntity.status(HttpStatus.OK).body(shortSummariesSurveys);
     }
+
+    @CrossOrigin
+    @GetMapping("/allwithtimeslots")
+    public ResponseEntity<List<ResponseSurveyWithTimeSlotsDto>> getAllSurveysWithTimeSlots(){
+        List<ResponseSurveyWithTimeSlotsDto> responseSurveyWithTimeSlotsDtoList = surveyService.getallSurveysWithTimeSlots();
+        return ResponseEntity.status(HttpStatus.OK).body(responseSurveyWithTimeSlotsDtoList);
+    }
+
+
 
 }
