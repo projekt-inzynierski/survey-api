@@ -50,12 +50,13 @@ public class SurveyResponsesController {
 
     @GetMapping("/results")
     public ResponseEntity<List<SurveyResultDto>> getSurveyResults(
-            @RequestParam("surveyId") UUID surveyId,
-            @RequestParam("dateFrom") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") OffsetDateTime dateFrom,
-            @RequestParam("dateTo") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") OffsetDateTime dateTo) {
+            @RequestParam(value = "surveyId", required = false) UUID surveyId,
+            @RequestParam(value = "respondentId", required = false) UUID identityUserId,
+            @RequestParam(value = "dateFrom", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") OffsetDateTime dateFrom,
+            @RequestParam(value = "dateTo", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'") OffsetDateTime dateTo) {
 
         claimsPrincipalService.ensureRole(Role.ADMIN.getRoleName());
-        List<SurveyResultDto> results = surveyResponsesService.getSurveyResults(surveyId, dateFrom, dateTo);
+        List<SurveyResultDto> results = surveyResponsesService.getSurveyResults(surveyId, identityUserId, dateFrom, dateTo);
         return ResponseEntity.status(HttpStatus.OK).body(results);
     }
 }

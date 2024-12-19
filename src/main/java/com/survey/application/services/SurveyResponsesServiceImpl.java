@@ -6,9 +6,12 @@ import com.survey.application.dtos.SurveyResultDto;
 import com.survey.application.dtos.surveyDtos.*;
 import com.survey.domain.models.*;
 import com.survey.domain.models.enums.QuestionType;
-import com.survey.domain.repository.*;
+import com.survey.domain.repository.OptionRepository;
+import com.survey.domain.repository.QuestionRepository;
+import com.survey.domain.repository.SurveyParticipationRepository;
+import com.survey.domain.repository.SurveyRepository;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -190,21 +193,32 @@ public class SurveyResponsesServiceImpl implements SurveyResponsesService {
 
     @Override
     @Transactional
-    public List<SurveyResultDto> getSurveyResults(UUID surveyId, OffsetDateTime dateFrom, OffsetDateTime dateTo) {
-        String jpql = "SELECT sp FROM SurveyParticipation sp " +
-                "JOIN sp.survey s " +
-                "JOIN sp.questionAnswers qa " +
-                "LEFT JOIN FETCH sp.localizationDataList ld " +
-                "WHERE sp.survey.id = :surveyId " +
-                "AND sp.date BETWEEN :dateFrom AND :dateTo " +
-                "ORDER BY ld.dateTime";
+    public List<SurveyResultDto> getSurveyResults(UUID surveyId, UUID identityUserId, OffsetDateTime dateFrom, OffsetDateTime dateTo) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<SurveyParticipation> cq = cb.createQuery(SurveyParticipation.class);
 
-        TypedQuery<SurveyParticipation> query = entityManager.createQuery(jpql, SurveyParticipation.class);
-        query.setParameter("surveyId", surveyId);
-        query.setParameter("dateFrom", dateFrom);
-        query.setParameter("dateTo", dateTo);
+        Root<SurveyParticipation> root = cq.from(SurveyParticipation.class);
+        root.fetch("localizationDataList", JoinType.LEFT);
 
-        List<SurveyParticipation> participationList = query.getResultList();
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (surveyId != null) {
+            predicates.add(cb.equal(root.get("survey").get("id"), surveyId));
+        }
+        if (identityUserId != null) {
+            predicates.add(cb.equal(root.get("identityUser").get("id"), identityUserId));
+        }
+        if (dateFrom != null && dateTo != null) {
+            predicates.add(cb.between(root.get("date"), dateFrom, dateTo));
+        } else if (dateFrom != null) {
+            predicates.add(cb.greaterThanOrEqualTo(root.get("date"), dateFrom));
+        } else if (dateTo != null) {
+            predicates.add(cb.lessThanOrEqualTo(root.get("date"), dateTo));
+        }
+
+        cq.select(root).where(cb.and(predicates.toArray(new Predicate[0])));
+        List<SurveyParticipation> participationList = entityManager.createQuery(cq)
+                .getResultList();
 
         return participationList.stream()
                 .flatMap(this::mapParticipationToDto)

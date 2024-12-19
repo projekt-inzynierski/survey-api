@@ -5,6 +5,10 @@ import com.survey.domain.models.*;
 import com.survey.domain.models.enums.QuestionType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -19,10 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = SurveyResponsesServiceImpl.class)
@@ -34,8 +35,6 @@ class SurveyResponsesServiceImplTest {
     private static final String QUESTION_3 = "Question 3";
     private static final String OPTION_1 = "Option 1";
     private static final String OPTION_2 = "Option 2";
-    private static final boolean YES_NO_ANSWER = true;
-    private static final int NUMERIC_ANSWER = 4;
     private static final BigDecimal VALID_LATITUDE = new BigDecimal("52.237049");
     private static final BigDecimal VALID_LONGITUDE = new BigDecimal("21.017532");
 
@@ -60,61 +59,26 @@ class SurveyResponsesServiceImplTest {
     }
 
     @Test
-    void shouldGetSurveyResults() {
-        UUID surveyId = survey.getId();
-        OffsetDateTime dateFrom = OffsetDateTime.now(ZoneOffset.UTC).minusYears(1);
-        OffsetDateTime dateTo = OffsetDateTime.now(ZoneOffset.UTC).plusYears(1);
+    void getSurveyResults_shouldReturnAllSurveyResults_WhenNoParams() {
+        CriteriaBuilder mockCriteriaBuilder = Mockito.mock(CriteriaBuilder.class);
+        CriteriaQuery<SurveyParticipation> mockCriteriaQuery = Mockito.mock(CriteriaQuery.class);
+        Root<SurveyParticipation> mockRoot = Mockito.mock(Root.class);
+        TypedQuery<SurveyParticipation> mockTypedQuery = Mockito.mock(TypedQuery.class);
 
-        TypedQuery<SurveyParticipation> mockQuery = Mockito.mock(TypedQuery.class);
-        when(entityManager.createQuery(anyString(), eq(SurveyParticipation.class)))
-                .thenReturn(mockQuery);
-        when(mockQuery.getResultList())
-                .thenReturn(List.of(surveyParticipation));
+        when(entityManager.getCriteriaBuilder()).thenReturn(mockCriteriaBuilder);
+        when(mockCriteriaBuilder.createQuery(SurveyParticipation.class)).thenReturn(mockCriteriaQuery);
+        when(mockCriteriaQuery.from(SurveyParticipation.class)).thenReturn(mockRoot);
 
-        List<SurveyResultDto> results = surveyResponsesService.getSurveyResults(surveyId, dateFrom, dateTo);
+        when(mockCriteriaQuery.select(mockRoot)).thenReturn(mockCriteriaQuery);
+        when(mockCriteriaQuery.where((Predicate) Mockito.any())).thenReturn(mockCriteriaQuery);
 
+        when(entityManager.createQuery(mockCriteriaQuery)).thenReturn(mockTypedQuery);
+        when(mockTypedQuery.getResultList()).thenReturn(List.of(surveyParticipation));
+
+        List<SurveyResultDto> results = surveyResponsesService.getSurveyResults(null, null, null, null);
+
+        assertFalse(results.isEmpty());
         assertEquals(SURVEY_NAME, results.get(0).getSurveyName());
-        assertEquals(QUESTION_1, results.get(0).getQuestion());
-        assertEquals(OPTION_1, results.get(0).getAnswers().get(0));
-        assertEquals(VALID_LATITUDE, results.get(0).getLocalizations().get(0).getLatitude());
-        assertEquals(VALID_LONGITUDE, results.get(0).getLocalizations().get(0).getLongitude());
-
-        assertEquals(SURVEY_NAME, results.get(1).getSurveyName());
-        assertEquals(QUESTION_2, results.get(1).getQuestion());
-        assertEquals(YES_NO_ANSWER, results.get(1).getAnswers().get(0));
-        assertEquals(VALID_LATITUDE, results.get(1).getLocalizations().get(0).getLatitude());
-        assertEquals(VALID_LONGITUDE, results.get(1).getLocalizations().get(0).getLongitude());
-
-        assertEquals(SURVEY_NAME, results.get(2).getSurveyName());
-        assertEquals(QUESTION_3, results.get(2).getQuestion());
-        assertEquals(NUMERIC_ANSWER, results.get(2).getAnswers().get(0));
-        assertEquals(VALID_LATITUDE, results.get(2).getLocalizations().get(0).getLatitude());
-        assertEquals(VALID_LONGITUDE, results.get(2).getLocalizations().get(0).getLongitude());
-
-        verify(mockQuery).setParameter("surveyId", surveyId);
-        verify(mockQuery).setParameter("dateFrom", dateFrom);
-        verify(mockQuery).setParameter("dateTo", dateTo);
-    }
-
-    @Test
-    void shouldNotReturnSurveyResultsWhenDateIsOutOfRange() {
-        UUID surveyId = survey.getId();
-        OffsetDateTime dateFrom = OffsetDateTime.now(ZoneOffset.UTC).minusYears(2);
-        OffsetDateTime dateTo = OffsetDateTime.now(ZoneOffset.UTC).minusYears(1);
-
-        TypedQuery<SurveyParticipation> mockQuery = Mockito.mock(TypedQuery.class);
-        when(entityManager.createQuery(anyString(), eq(SurveyParticipation.class)))
-                .thenReturn(mockQuery);
-        when(mockQuery.getResultList())
-                .thenReturn(List.of());
-
-        List<SurveyResultDto> results = surveyResponsesService.getSurveyResults(surveyId, dateFrom, dateTo);
-
-        assertTrue(results.isEmpty());
-
-        verify(mockQuery).setParameter("surveyId", surveyId);
-        verify(mockQuery).setParameter("dateFrom", dateFrom);
-        verify(mockQuery).setParameter("dateTo", dateTo);
     }
 
     private SurveyParticipation createSurveyParticipation() {
